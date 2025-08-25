@@ -6,7 +6,6 @@
   <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 
-    // ⚠️ Mets tes vraies infos Supabase ici
     const supabaseUrl = 'https://ydmqxamsgotncqhqvcgt.supabase.co'
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkbXF4YW1zZ290bmNxaHF2Y2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxNDMyMjAsImV4cCI6MjA3MTcxOTIyMH0.AtUSpfLpklsGzTEKnl2QjKeEcmPNOTEhXiosWivK0Gk'
     const supabase = createClient(supabaseUrl, supabaseKey)
@@ -15,9 +14,8 @@
     const form = document.getElementById("animeForm")
     const formTitle = document.getElementById("formTitle")
 
-    let editingId = null // savoir si on édite ou on ajoute
+    let editingId = null
 
-    // Charger les animes
     async function loadAnimes() {
       const { data, error } = await supabase.from('animes').select('*').order('id', { ascending: false })
       if (error) return console.error(error)
@@ -25,6 +23,7 @@
       tbody.innerHTML = ""
       data.forEach(animes => {
         const tr = document.createElement("tr")
+        tr.classList.add("fade-in")
         tr.innerHTML = `
           <td>${animes.titre_jp || ''}</td>
           <td>${animes.titre_en || ''}</td>
@@ -35,15 +34,14 @@
           <td>${animes.tags ? animes.tags.join(', ') : ''}</td>
           <td>${animes.date || ''}</td>
           <td>
-            <button onclick="editAnimes(${animes.id})">✏️</button>
-            <button onclick="deleteAnimes(${animes.id})">🗑️</button>
+            <button class="edit" onclick="editAnimes(${animes.id})">✏️</button>
+            <button class="delete" onclick="deleteAnimes(${animes.id})">🗑️</button>
           </td>
         `
         tbody.appendChild(tr)
       })
     }
 
-    // Ajouter / Modifier anime
     form.addEventListener("submit", async (e) => {
       e.preventDefault()
       const animes = {
@@ -67,18 +65,18 @@
       }
 
       form.reset()
+      showNotification("✅ Sauvegardé avec succès")
       loadAnimes()
     })
 
-    // Supprimer anime
     window.deleteAnimes = async function(id) {
       if (confirm("Supprimer cet anime ?")) {
         await supabase.from('animes').delete().eq('id', id)
+        showNotification("🗑️ Anime supprimé")
         loadAnimes()
       }
     }
 
-    // Éditer anime
     window.editAnimes = async function(id) {
       const { data } = await supabase.from('animes').select('*').eq('id', id).single()
       if (!data) return
@@ -93,28 +91,140 @@
       form.tags.value = data.tags ? data.tags.join(', ') : ''
       form.date.value = data.date || ''
       form.poster_url.value = data.poster_url || ''
+      showNotification("✏️ Mode édition activé")
+    }
+
+    function showNotification(message) {
+      const notif = document.createElement("div")
+      notif.className = "notification"
+      notif.textContent = message
+      document.body.appendChild(notif)
+      setTimeout(() => notif.classList.add("show"), 50)
+      setTimeout(() => notif.classList.remove("show"), 2000)
+      setTimeout(() => notif.remove(), 2500)
     }
 
     loadAnimes()
   </script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f9;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+
+    h1, h2 {
+      text-align: center;
+      color: #444;
+    }
+
+    form {
+      background: #fff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      max-width: 400px;
+      margin: 20px auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    input, textarea, button {
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    button {
+      background: #4cafef;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.3s;
+    }
+
+    button:hover {
+      background: #3a9ed9;
+      transform: scale(1.05);
+    }
+
+    button.delete {
+      background: #e74c3c;
+    }
+
+    button.delete:hover {
+      background: #c0392b;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #eee;
+      text-align: left;
+    }
+
+    th {
+      background: #f0f2f5;
+    }
+
+    tr.fade-in {
+      animation: fadeIn 0.5s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #4caf50;
+      color: #fff;
+      padding: 10px 15px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      opacity: 0;
+      transform: translateY(-10px);
+      transition: opacity 0.3s, transform 0.3s;
+      z-index: 9999;
+    }
+
+    .notification.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
 </head>
 <body>
   <h1 id="formTitle">Ajouter un anime</h1>
   <form id="animeForm">
-    <input name="titre_jp" placeholder="Titre JP" required><br>
-    <input name="titre_en" placeholder="Titre EN"><br>
-    <input name="titre_fr" placeholder="Titre FR"><br>
-    <textarea name="description" placeholder="Description"></textarea><br>
-    <textarea name="description_perso" placeholder="Description perso"></textarea><br>
-    <input name="note" placeholder="Note" type="number" step="0.1"><br>
-    <input name="tags" placeholder="Tags (séparés par virgules)"><br>
-    <input name="date" type="date"><br>
-    <input name="poster_url" placeholder="Lien image"><br>
+    <input name="titre_jp" placeholder="Titre JP" required>
+    <input name="titre_en" placeholder="Titre EN">
+    <input name="titre_fr" placeholder="Titre FR">
+    <textarea name="description" placeholder="Description"></textarea>
+    <textarea name="description_perso" placeholder="Description perso"></textarea>
+    <input name="note" placeholder="Note" type="number" step="0.1">
+    <input name="tags" placeholder="Tags (séparés par virgules)">
+    <input name="date" type="date">
+    <input name="poster_url" placeholder="Lien image">
     <button type="submit">💾 Sauvegarder</button>
   </form>
 
   <h2>Liste des animes</h2>
-  <table border="1" id="dataTable">
+  <table id="dataTable">
     <thead>
       <tr>
         <th>Titre JP</th>
@@ -132,5 +242,3 @@
   </table>
 </body>
 </html>
-
-
