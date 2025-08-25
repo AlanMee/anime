@@ -23,20 +23,20 @@
       if (error) return console.error(error)
 
       tbody.innerHTML = ""
-      data.forEach(anime => {
+      data.forEach(animes => {
         const tr = document.createElement("tr")
         tr.innerHTML = `
-          <td>${anime.titre_jp || ''}</td>
-          <td>${anime.titre_en || ''}</td>
-          <td>${anime.titre_fr || ''}</td>
-          <td>${anime.description || ''}</td>
-          <td>${anime.description_perso || ''}</td>
-          <td>${anime.note || ''}</td>
-          <td>${anime.tags ? anime.tags.join(', ') : ''}</td>
-          <td>${anime.date || ''}</td>
+          <td>${animes.titre_jp || ''}</td>
+          <td>${animes.titre_en || ''}</td>
+          <td>${animes.titre_fr || ''}</td>
+          <td>${animes.description || ''}</td>
+          <td>${animes.description_perso || ''}</td>
+          <td>${animes.note || ''}</td>
+          <td>${animes.tags ? animes.tags.join(', ') : ''}</td>
+          <td>${animes.date || ''}</td>
           <td>
-            <button onclick="editAnime(${anime.id})">✏️</button>
-            <button onclick="deleteAnime(${anime.id})">🗑️</button>
+            <button onclick="editAnime(${animes.id})">✏️</button>
+            <button onclick="deleteAnime(${animes.id})">🗑️</button>
           </td>
         `
         tbody.appendChild(tr)
@@ -46,7 +46,7 @@
     // Ajouter / Modifier anime
     form.addEventListener("submit", async (e) => {
       e.preventDefault()
-      const anime = {
+      const animes = {
         titre_jp: form.titre_jp.value,
         titre_en: form.titre_en.value,
         titre_fr: form.titre_fr.value,
@@ -59,11 +59,11 @@
       }
 
       if (editingId) {
-        await supabase.from('animes').update(anime).eq('id', editingId)
+        await supabase.from('animes').update(animes).eq('id', editingId)
         editingId = null
         formTitle.textContent = "Ajouter un anime"
       } else {
-        await supabase.from('animes').insert([anime])
+        await supabase.from('animes').insert([animes])
       }
 
       form.reset()
@@ -71,7 +71,7 @@
     })
 
     // Supprimer anime
-    window.deleteAnime = async function(id) {
+    window.deleteAnimes = async function(id) {
       if (confirm("Supprimer cet anime ?")) {
         await supabase.from('animes').delete().eq('id', id)
         loadAnimes()
@@ -79,7 +79,7 @@
     }
 
     // Éditer anime
-    window.editAnime = async function(id) {
+    window.editAnimes = async function(id) {
       const { data } = await supabase.from('animes').select('*').eq('id', id).single()
       if (!data) return
       editingId = id
