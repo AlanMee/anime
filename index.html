@@ -28,13 +28,13 @@
     }
 
     const ul = document.getElementById('liste-animes');
-    data.forEach(Anime => {
-      const titre = Anime.titre ?? "Titre inconnu";
+    data.forEach(animes => {
+      const titre = animes.titre ?? "Titre inconnu";
       const note = Anime.note ?? "–";
-      const tags = Array.isArray(Anime.tags) ? Anime.tags.join(", ") : "Aucun tag";
-      const commentaire = Anime.commentaire ?? "";
-      const vu = Anime.vu ? "✅ Vu" : "❌ Pas vu";
-      const date = Anime.date ? new Date(anime.date).toLocaleDateString() : "Date inconnue";
+      const tags = Array.isArray(animes.tags) ? animes.tags.join(", ") : "Aucun tag";
+      const commentaire = animes.commentaire ?? "";
+      const vu = animes.vu ? "✅ Vu" : "❌ Pas vu";
+      const date = animes.date ? new Date(anime.date).toLocaleDateString() : "Date inconnue";
 
       ul.innerHTML += `
         <li>
