@@ -16,10 +16,11 @@
     const modal = document.getElementById("modal")
     const openModalBtn = document.getElementById("openModal")
     const closeModalBtn = document.getElementById("closeModal")
-    const filterRomance = document.getElementById("filterRomance")
+    const filtersDiv = document.getElementById("filters")
 
     let editingId = null
     let allAnimes = [] // pour stocker et filtrer localement
+    let selectedTags = new Set()
 
     // ouvrir / fermer la popup
     openModalBtn.addEventListener("click", () => {
@@ -37,7 +38,30 @@
       const { data, error } = await supabase.from('animes').select('*').order('id', { ascending: false })
       if (error) return console.error(error)
       allAnimes = data
+      buildFilters()
       renderTable()
+    }
+
+    // construire dynamiquement les filtres à partir des tags
+    function buildFilters() {
+      filtersDiv.innerHTML = ""
+      const tagsSet = new Set()
+      allAnimes.forEach(a => {
+        if (a.tags) a.tags.forEach(t => tagsSet.add(t))
+      })
+      tagsSet.forEach(tag => {
+        const label = document.createElement("label")
+        label.innerHTML = `<input type="checkbox" value="${tag}"> ${tag}`
+        label.querySelector("input").addEventListener("change", (e) => {
+          if (e.target.checked) {
+            selectedTags.add(tag)
+          } else {
+            selectedTags.delete(tag)
+          }
+          renderTable()
+        })
+        filtersDiv.appendChild(label)
+      })
     }
 
     // rendu du tableau avec filtre
@@ -45,8 +69,10 @@
       tbody.innerHTML = ""
       let filtered = allAnimes
 
-      if (filterRomance.checked) {
-        filtered = filtered.filter(anime => anime.tags && anime.tags.includes("romance"))
+      if (selectedTags.size > 0) {
+        filtered = filtered.filter(anime =>
+          anime.tags && anime.tags.some(t => selectedTags.has(t))
+        )
       }
 
       filtered.forEach(animes => {
@@ -80,7 +106,7 @@
         description: form.description.value,
         description_perso: form.description_perso.value,
         note: parseFloat(form.note.value) || null,
-        tags: form.tags.value.split(',').map(t => t.trim()),
+        tags: form.tags.value.split(',').map(t => t.trim()).filter(t => t !== ""),
         date: form.date.value || null,
         poster_url: form.poster_url.value
       }
@@ -136,8 +162,6 @@
       setTimeout(() => notif.classList.remove("show"), 2000)
       setTimeout(() => notif.remove(), 2500)
     }
-
-    filterRomance.addEventListener("change", renderTable)
 
     loadAnimes()
   </script>
@@ -218,15 +242,17 @@
     .filters {
       margin: 20px; text-align: center;
     }
+    .filters label {
+      margin: 0 10px;
+      display: inline-block;
+    }
   </style>
 </head>
 <body>
   <button id="openModal">➕ Ajouter</button>
   <h2>Liste des animes</h2>
 
-  <div class="filters">
-    <label><input type="checkbox" id="filterRomance"> Afficher seulement les romances</label>
-  </div>
+  <div class="filters" id="filters"></div>
 
   <table id="dataTable">
     <thead>
