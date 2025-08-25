@@ -35,7 +35,7 @@
           <td>${animes.tags ? animes.tags.join(', ') : ''}</td>
           <td>${animes.date || ''}</td>
           <td>
-            <button onclick="editAnime(${animes.id})">✏️</button>
+            <button onclick="editAnimes(${animes.id})">✏️</button>
             <button onclick="deleteAnime(${animes.id})">🗑️</button>
           </td>
         `
@@ -132,3 +132,4 @@
   </table>
 </body>
 </html>
+
