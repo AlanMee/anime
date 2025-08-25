@@ -30,11 +30,11 @@
     const ul = document.getElementById('liste-animes');
     data.forEach(animes => {
       const titre = animes.titre ?? "Titre inconnu";
-      const note = Anime.note ?? "–";
+      const note = animes.note ?? "–";
       const tags = Array.isArray(animes.tags) ? animes.tags.join(", ") : "Aucun tag";
       const commentaire = animes.commentaire ?? "";
       const vu = animes.vu ? "✅ Vu" : "❌ Pas vu";
-      const date = animes.date ? new Date(anime.date).toLocaleDateString() : "Date inconnue";
+      const date = animes.date ? new Date(animes.date).toLocaleDateString() : "Date inconnue";
 
       ul.innerHTML += `
         <li>
