@@ -9,11 +9,11 @@
   <ul id="liste-animes"></ul>
 
   <script type="module">
-  import { createClient } from "@supabase/supabase-js";
+  import { createClient } from "https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm";
 
   const supabase = createClient(
     'https://lkuwksnbtwfrkrtchlpm.supabase.co',
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrdXdrc25idHdmcmtydGNobHBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxMTg4NjUsImV4cCI6MjA3MTY5NDg2NX0.I973fdIfwlDPCKCwUM8NlyaWoCCdzaihRaFh-ssK8ok'
+    'sb_secret_15QNoG-xQUIp14TLrYGA7A_BhbHAn5Y'
   );
 
   async function chargerAnimes() {
