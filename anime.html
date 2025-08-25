@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Mes animés</title>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+</head>
+<body>
+  <h1>Liste d’animés</h1>
+  <ul id="liste-animes"></ul>
+
+  <script>
+    const supabase = supabase.createClient(
+      'https://lkuwksnbtwfrkrtchlpm.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrdXdrc25idHdmcmtydGNobHBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxMTg4NjUsImV4cCI6MjA3MTY5NDg2NX0.I973fdIfwlDPCKCwUM8NlyaWoCCdzaihRaFh-ssK8ok'
+    );
+
+    async function chargerAnimes() {
+      const { data, error } = await supabase
+        .from('animes')
+        .select('*')
+        .order('id', { ascending: false });
+
+      if (error) {
+        console.error(error);
+        return;
+      }
+
+      const ul = document.getElementById('liste-animes');
+      data.forEach(anime => {
+        ul.innerHTML += `<li><strong>${anime.titre}</strong> - Note : ${anime.note} - Tags : ${anime.tags?.join(", ")}</li>`;
+      });
+    }
+
+    chargerAnimes();
+  </script>
+</body>
+</html>
