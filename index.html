@@ -46,6 +46,15 @@
       renderTable()
     }
 
+    function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = String(d.getFullYear()).slice(-2);
+  return `${day}/${month}/${year}`;
+}
+
     // construire dynamiquement les filtres à partir des tags
     function buildFilters() {
       filtersDiv.innerHTML = ""
@@ -108,7 +117,7 @@ if (selectedTags.size > 0) {
           <td>${animes.description_perso || ''}</td>
           <td>${animes.note || ''}</td>
           <td>${animes.tags ? animes.tags.join(', ') : ''}</td>
-          <td>${animes.date || ''}</td>
+          <td>${formatDate(animes.date)}</td>
           <td>
             <button class="edit" onclick="editAnimes(${animes.id})">✏️</button>
             <button class="delete" onclick="deleteAnimes(${animes.id})">🗑️</button>
@@ -204,14 +213,14 @@ if (selectedTags.size > 0) {
       top: 20px;
       left: 20px;
       padding: 10px 15px;
-      background: #4cafef;
+      background: #5f4cef;
       color: #fff;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       width: 98%;
     }
-    #openModal:hover { background: #3a9ed9; }
+    #openModal:hover { background: #6a59ec; }
     /* Modal */
     #modal {
       position: fixed;
@@ -249,7 +258,9 @@ if (selectedTags.size > 0) {
       width: 95%;
     }
     button.delete { background: #e74c3c; color: #fff; cursor: pointer;}
+    button.delete:hover {background-color: #f76c5d;}
     button.edit { background: #f39c12; color: #fff; cursor: pointer; }
+    button.edit:hover {background: #f5b040;}
     table {
       width: 100%; border-collapse: collapse; margin-top: 20px;
       background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
@@ -288,8 +299,8 @@ if (selectedTags.size > 0) {
         <th>Titre EN</th>
         <th>Titre FR</th>
         <th>Description</th>
-        <th>Perso</th>
-        <th>Note</th>
+        <th>Description perso</th>
+        <th>Note (/10)</th>
         <th>Tags</th>
         <th>Date</th>
         <th>Actions</th>
