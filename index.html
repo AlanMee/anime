@@ -15,24 +15,42 @@
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxrdXdrc25idHdmcmtydGNobHBtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxMTg4NjUsImV4cCI6MjA3MTY5NDg2NX0.I973fdIfwlDPCKCwUM8NlyaWoCCdzaihRaFh-ssK8ok'
     );
 
-    async function chargerAnimes() {
-      const { data, error } = await supabase
-        .from('animes')
-        .select('*')
-        .order('id', { ascending: false });
 
-      if (error) {
-        console.error(error);
-        return;
-      }
+  async function chargerAnimes() {
+    const { data, error } = await supabase
+      .from('animes')
+      .select('*')
+      .order('id', { ascending: false });
 
-      const ul = document.getElementById('liste-animes');
-      data.forEach(anime => {
-        ul.innerHTML += `<li><strong>${anime.titre}</strong> - Note : ${anime.note} - Tags : ${anime.tags?.join(", ")}</li>`;
-      });
+    if (error) {
+      console.error('Erreur lors du chargement :', error);
+      return;
     }
 
-    chargerAnimes();
-  </script>
+    const ul = document.getElementById('liste-animes');
+    data.forEach(Anime => {
+      const titre = Anime.titre ?? "Titre inconnu";
+      const note = Anime.note ?? "–";
+      const tags = Array.isArray(Anime.tags) ? Anime.tags.join(", ") : "Aucun tag";
+      const commentaire = Anime.commentaire ?? "";
+      const vu = Anime.vu ? "✅ Vu" : "❌ Pas vu";
+      const date = Anime.date ? new Date(anime.date).toLocaleDateString() : "Date inconnue";
+
+      ul.innerHTML += `
+        <li>
+          <strong>${titre}</strong><br>
+          Note : ${note}<br>
+          Tags : ${tags}<br>
+          Vu : ${vu}<br>
+          Date : ${date}<br>
+          Commentaire : ${commentaire}
+        </li>
+        <hr>
+      `;
+    });
+  }
+
+  chargerAnimes();
+</script>
 </body>
 </html>
