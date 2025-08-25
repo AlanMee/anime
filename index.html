@@ -19,6 +19,9 @@
     const closeModalBtn = document.getElementById("closeModal")
     const filtersDiv = document.getElementById("filters")
 
+    const previewDiv = document.getElementById("previewImage");
+    const previewImg = previewDiv.querySelector("img");
+
     let editingId = null
     let allAnimes = [] // pour stocker et filtrer localement
     let selectedTags = new Set()
@@ -65,6 +68,23 @@
       })
     }
 
+function addHoverPreviews() {
+  document.querySelectorAll("#dataTable tbody tr").forEach(tr => {
+    tr.addEventListener("mousemove", e => {
+      const imgUrl = tr.dataset.posterUrl;
+      if (imgUrl) {
+        previewImg.src = imgUrl;
+        previewDiv.style.display = "block";
+        previewDiv.style.left = e.pageX + 20 + "px";
+        previewDiv.style.top = e.pageY + 20 + "px";
+      }
+    });
+    tr.addEventListener("mouseout", () => {
+      previewDiv.style.display = "none";
+    });
+  });
+}
+
     // rendu du tableau avec filtre
     function renderTable() {
       tbody.innerHTML = ""
@@ -79,6 +99,7 @@ if (selectedTags.size > 0) {
       filtered.forEach(animes => {
         const tr = document.createElement("tr")
         tr.classList.add("fade-in")
+          tr.dataset.posterUrl = animes.poster_url || ''
         tr.innerHTML = `
           <td>${animes.titre_jp || ''}</td>
           <td>${animes.titre_en || ''}</td>
@@ -95,7 +116,10 @@ if (selectedTags.size > 0) {
         `
         tbody.appendChild(tr)
       })
+      addHoverPreviews();
     }
+
+    
 
     // ajout / édition
     form.addEventListener("submit", async (e) => {
@@ -293,5 +317,22 @@ if (selectedTags.size > 0) {
       <button id="closeModal">❌ Fermer</button>
     </div>
   </div>
+
+  <!-- Ajoute ce div juste avant la fermeture de </body> -->
+<div id="previewImage" style="
+  position: fixed;
+  pointer-events: none;
+  display: none;
+  border: 2px solid #ccc;
+  border-radius: 8px;
+  max-width: 200px;
+  max-height: 200px;
+  background: #fff;
+  padding: 5px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  z-index: 1000;
+">
+  <img src="" alt="Preview" style="width:100%; height:auto; border-radius: 5px;">
+</div>
 </body>
 </html>
