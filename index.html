@@ -66,35 +66,38 @@
 
     // rendu du tableau avec filtre
     function renderTable() {
-      tbody.innerHTML = ""
-      let filtered = allAnimes
+  tbody.innerHTML = ""
+  let filtered = allAnimes
 
-      if (selectedTags.size > 0) {
-        filtered = filtered.filter(anime =>
-          anime.tags && anime.tags.some(t => selectedTags.has(t))
-        )
-      }
+  const checked = [...document.querySelectorAll(".tagFilter:checked")].map(cb => cb.value)
 
-      filtered.forEach(animes => {
-        const tr = document.createElement("tr")
-        tr.classList.add("fade-in")
-        tr.innerHTML = `
-          <td>${animes.titre_jp || ''}</td>
-          <td>${animes.titre_en || ''}</td>
-          <td>${animes.titre_fr || ''}</td>
-          <td>${animes.description || ''}</td>
-          <td>${animes.description_perso || ''}</td>
-          <td>${animes.note || ''}</td>
-          <td>${animes.tags ? animes.tags.join(', ') : ''}</td>
-          <td>${animes.date || ''}</td>
-          <td>
-            <button class="edit" onclick="editAnimes(${animes.id})">✏️</button>
-            <button class="delete" onclick="deleteAnimes(${animes.id})">🗑️</button>
-          </td>
-        `
-        tbody.appendChild(tr)
-      })
-    }
+  if (checked.length > 0) {
+    filtered = filtered.filter(anime =>
+      anime.tags && checked.every(tag => anime.tags.includes(tag))
+    )
+  }
+
+  filtered.forEach(animes => {
+    const tr = document.createElement("tr")
+    tr.classList.add("fade-in")
+    tr.innerHTML = `
+      <td>${animes.titre_jp || ''}</td>
+      <td>${animes.titre_en || ''}</td>
+      <td>${animes.titre_fr || ''}</td>
+      <td>${animes.description || ''}</td>
+      <td>${animes.description_perso || ''}</td>
+      <td>${animes.note || ''}</td>
+      <td>${animes.tags ? animes.tags.join(', ') : ''}</td>
+      <td>${animes.date || ''}</td>
+      <td>
+        <button class="edit" onclick="editAnimes(${animes.id})">✏️</button>
+        <button class="delete" onclick="deleteAnimes(${animes.id})">🗑️</button>
+      </td>
+    `
+    tbody.appendChild(tr)
+  })
+}
+
 
     // ajout / édition
     form.addEventListener("submit", async (e) => {
@@ -292,3 +295,4 @@
   </div>
 </body>
 </html>
+
