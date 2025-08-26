@@ -50,35 +50,42 @@
 <body>
   <div id="loginBox">
     <h2>Connexion</h2>
-    <input type="text" id="username" placeholder="Nom d'utilisateur">
-    <input type="password" id="password" placeholder="Mot de passe">
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Mot de passe" required>
     <button id="loginBtn">Se connecter</button>
     <div class="error" id="loginError"></div>
   </div>
 
-  <script>
-    const VALID_USER = "admin";
-    const VALID_PASS = "1234";
+  <script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 
-    const loginBtn = document.getElementById("loginBtn");
-    const loginError = document.getElementById("loginError");
+    const supabaseUrl = 'https://ydmqxamsgotncqhqvcgt.supabase.co'
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkbXF4YW1zZ290bmNxaHF2Y2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxNDMyMjAsImV4cCI6MjA3MTcxOTIyMH0.AtUSpfLpklsGzTEKnl2QjKeEcmPNOTEhXiosWivK0Gk'
+    const supabase = createClient(supabaseUrl, supabaseKey)
 
-    loginBtn.addEventListener("click", () => {
-      const user = document.getElementById("username").value.trim();
-      const pass = document.getElementById("password").value.trim();
-      if (user === VALID_USER && pass === VALID_PASS) {
-        localStorage.setItem("isLoggedIn", "true");
-        window.location.href = "index.html"; // redirige vers la page principale
-      } else {
-        loginError.textContent = "❌ Identifiants incorrects";
+    const loginBtn = document.getElementById("loginBtn")
+    const loginError = document.getElementById("loginError")
+
+    loginBtn.addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim()
+      const password = document.getElementById("password").value.trim()
+
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+      if (error) {
+        loginError.textContent = "❌ Email ou mot de passe incorrect"
+        return
       }
-    });
 
-    // Si déjà connecté, on redirige automatiquement
+      // Sauvegarde un flag dans localStorage pour rester connecté
+      localStorage.setItem("isLoggedIn", "true")
+      window.location.href = "index.html"
+    })
+
+    // redirection si déjà connecté
     if(localStorage.getItem("isLoggedIn") === "true"){
-      window.location.href = "index.html";
+      window.location.href = "index.html"
     }
   </script>
 </body>
 </html>
-
