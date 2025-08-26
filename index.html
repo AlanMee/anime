@@ -5,7 +5,13 @@
   <title>Liste Anime </title>
   <link rel="icon" href="icone.ico" type="image/x-icon"/>
   <script type="module">
-    import { createClient } from 'https://esm.sh/@supabase/supabase-js'
+
+// redirige vers login si pas connecté
+if(localStorage.getItem("isLoggedIn") !== "true"){
+  window.location.href = "connexion.html";
+}
+
+import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 
     const supabaseUrl = 'https://ydmqxamsgotncqhqvcgt.supabase.co'
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkbXF4YW1zZ290bmNxaHF2Y2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxNDMyMjAsImV4cCI6MjA3MTcxOTIyMH0.AtUSpfLpklsGzTEKnl2QjKeEcmPNOTEhXiosWivK0Gk'
@@ -68,6 +74,13 @@ window.sortBy = function(field) {
   const year = String(d.getFullYear()).slice(-2);
   return `${day}/${month}/${year}`;
 }
+
+const logoutBtn = document.getElementById("logoutBtn");
+
+logoutBtn.addEventListener("click", () => {
+  localStorage.removeItem("isLoggedIn");  // supprime le token local
+  window.location.href = "connexion.html";     // redirige vers la page de connexion
+});
 
     // construire dynamiquement les filtres à partir des tags
     function buildFilters() {
@@ -392,9 +405,34 @@ th {
 .sort-btn:hover {
   color: #5f4cef;
 }
+
+#logoutBtn {
+  position: fixed;        /* toujours visible en haut à droite */
+  top: 20px;
+  left: 150px;
+  padding: 10px 15px;
+  font-size: 14px;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  z-index: 100;
+  width: auto;
+}
+
+#logoutBtn:hover {
+  background: #f76c5d;
+}
+
+
   </style>
 </head>
 <body>
+
+<button id="logoutBtn">🚪 Déconnexion</button>
+
+
   <div class="header-fixed">
   <button id="openModal">➕ Ajouter</button>
 
@@ -471,3 +509,4 @@ th {
 </div>
 </body>
 </html>
+
