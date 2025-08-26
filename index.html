@@ -37,6 +37,20 @@
       formTitle.textContent = "Ajouter un anime"
     })
 
+    let sortField = null;
+let sortOrder = 'asc'; // 'asc' ou 'desc'
+
+window.sortBy = function(field) {
+  if (sortField === field) {
+    // on inverse l'ordre si on reclique
+    sortOrder = (sortOrder === 'asc') ? 'desc' : 'asc';
+  } else {
+    sortField = field;
+    sortOrder = 'asc';
+  }
+  renderTable();
+};
+
     // charger la liste
     async function loadAnimes() {
       const { data, error } = await supabase.from('animes').select('*').order('id', { ascending: false })
@@ -85,7 +99,7 @@ function addHoverPreviews() {
         previewImg.src = imgUrl;
         previewDiv.style.display = "block";
         previewDiv.style.left = e.pageX + 20 + "px";
-        previewDiv.style.top = e.pageY + 20 + "px";
+        previewDiv.style.top = e.pageY + -120 + "px";
       }
     });
     tr.addEventListener("mouseout", () => {
@@ -104,6 +118,22 @@ if (selectedTags.size > 0) {
     anime.tags && [...selectedTags].every(tag => anime.tags.includes(tag))
   )
 }
+
+  if (sortField) {
+    filtered = [...filtered].sort((a, b) => {
+      if (sortField === 'note') {
+        const na = a.note || 0;
+        const nb = b.note || 0;
+        return sortOrder === 'asc' ? na - nb : nb - na;
+      }
+      if (sortField === 'date') {
+        const da = a.date ? new Date(a.date) : new Date(0);
+        const db = b.date ? new Date(b.date) : new Date(0);
+        return sortOrder === 'asc' ? da - db : db - da;
+      }
+      return 0;
+    });
+  }
 
       filtered.forEach(animes => {
         const tr = document.createElement("tr")
@@ -200,14 +230,52 @@ if (selectedTags.size > 0) {
     loadAnimes()
   </script>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f9;
-      margin: 0;
-      padding: 20px;
-      color: #333;
-    }
-    h1, h2 { text-align: center; }
+     body {
+    font-family: Arial, sans-serif;
+    background: #121212;
+    margin: 0;
+    padding-left: 20px;
+    padding-right: 20px;
+    color: #333;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+    .header-fixed {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: #121212;
+    border-bottom: 1px solid #333;
+  }
+
+    .table-container {
+    flex: 1;
+    overflow-y: scroll;
+    scrollbar-width: none; /* Firefox */
+  }
+
+  /* thead fixé */
+  thead tr {
+    position: sticky;
+    top: 0; 
+    z-index: 15;
+    background: #1e1e1e;
+  }
+
+  tr.fade-in { 
+    animation: fadeIn 0.5s ease; 
+  }
+  @keyframes fadeIn { 
+    from {opacity:0; transform:translateY(-5px);} 
+    to{opacity:1; transform:translateY(0);} 
+  }
+
+  .table-container::-webkit-scrollbar {
+    display: none; /* Chrome / Safari */
+  }
+    h1, h2 { text-align: center; color: #ffffff; }
     #openModal {
       position: absolute;
       top: 20px;
@@ -226,24 +294,26 @@ if (selectedTags.size > 0) {
       position: fixed;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.5);
+      background: rgba(0,0,0,0.7);
       display: flex;
       align-items: center;
       justify-content: center;
       visibility: hidden;
       opacity: 0;
       transition: opacity 0.3s;
+      z-index: 100;
     }
     #modal.show {
       visibility: visible;
       opacity: 1;
     }
     #modalContent {
-      background: #fff;
+     background: #1e1e1e;
+      color: #e0e0e0;
       padding: 20px;
       border-radius: 12px;
       width: 400px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.7);
       animation: slideDown 0.3s ease;
     }
     @keyframes slideDown {
@@ -252,22 +322,29 @@ if (selectedTags.size > 0) {
     }
     input, textarea, button {
       padding: 10px;
-      border: 1px solid #ddd;
+      border: 1px solid #444;
+       background: #121212;
+      color: #e0e0e0;
       border-radius: 8px;
       margin: 5px 0;
       width: 95%;
     }
-    button.delete { background: #e74c3c; color: #fff; cursor: pointer;}
-    button.delete:hover {background-color: #f76c5d;}
-    button.edit { background: #f39c12; color: #fff; cursor: pointer; }
-    button.edit:hover {background: #f5b040;}
+
+        input:focus, textarea:focus {
+      outline: none;
+      border-color: #5f4cef;
+    }
+button.delete { background: #e74c3c; color: #fff; cursor: pointer; border: none; border-radius: 6px; padding: 6px 10px;}
+    button.delete:hover { background: #f76c5d; }
+    button.edit { background: #f39c12; color: #fff; cursor: pointer; border: none; border-radius: 6px; padding: 6px 10px;}
+    button.edit:hover { background: #f5b040; }
     table {
       width: 100%; border-collapse: collapse; margin-top: 20px;
-      background: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+       background: #1e1e1e;; box-shadow: 0 2px 8px rgba(0,0,0,0.5);
     }
-    th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: center;}
-    tr:hover {background-color: rgb(223, 222, 222);}
-    th { background: #f0f2f5; }
+    th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; color: #e0e0e0;}
+    tr:hover {background-color: #2a2a2a;}
+    th { background: #1e1e1e; font-weight: bold; }
     tr.fade-in { animation: fadeIn 0.5s ease; }
     @keyframes fadeIn { from {opacity:0; transform:translateY(-5px);} to{opacity:1; transform:translateY(0);} }
     .notification {
@@ -276,38 +353,84 @@ if (selectedTags.size > 0) {
       border-radius:8px; opacity:0; transform:translateY(-10px);
       transition: opacity 0.3s, transform 0.3s;
     }
-    .notification.show { opacity:1; transform:translateY(0); }
+    .notification.show { opacity:1; transform:translateY(0); z-index: 100; }
+
     .filters {
       margin: 20px; text-align: center;
     }
     .filters label {
       margin: 0 10px;
       display: inline-block;
+      color: white;
     }
+
+/* garde les cellules <th> normales */
+th {
+  padding: 12px;
+  border-bottom: 1px solid #eee;
+  text-align: center;
+  vertical-align: middle; /* bien centré */
+}
+
+/* flex uniquement dans le wrapper */
+.th-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px; /* espace texte/bouton */
+}
+
+.sort-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1;
+  padding: 0;
+  color: #bbb;
+}
+.sort-btn:hover {
+  color: #5f4cef;
+}
   </style>
 </head>
 <body>
+  <div class="header-fixed">
   <button id="openModal">➕ Ajouter</button>
-  <h2>Liste des animes</h2>
 
-  <div class="filters" id="filters"></div>
+    <h2>Liste des animes</h2>
+    <div class="filters" id="filters"></div>
+  </div>
 
-  <table id="dataTable">
-    <thead>
-      <tr>
-        <th>Titre JP</th>
-        <th>Titre EN</th>
-        <th>Titre FR</th>
-        <th>Description</th>
-        <th>Description perso</th>
-        <th>Note (/10)</th>
-        <th>Tags</th>
-        <th>Date</th>
-        <th>Actions</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
+  <!-- zone scrollable -->
+  <div class="table-container">
+    <table id="dataTable">
+      <thead>
+        <tr>
+          <th>Titre JP</th>
+          <th>Titre EN</th>
+          <th>Titre FR</th>
+          <th>Description</th>
+          <th>Description perso</th>
+<th>
+      <div class="th-content">
+        <span>Note (/10)</span>
+        <button type="button" class="sort-btn" onclick="sortBy('note')">↕️</button>
+      </div>
+    </th>
+    <th>Tags</th>
+    <th>
+      <div class="th-content">
+        <span>Date</span>
+        <button type="button" class="sort-btn" onclick="sortBy('date')">↕️</button>
+      </div>
+    </th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
 
   <!-- Modal -->
   <div id="modal">
@@ -343,8 +466,8 @@ if (selectedTags.size > 0) {
   box-shadow: 0 2px 10px rgba(0,0,0,0.3);
   z-index: 1000;
 ">
-  <img src="" alt="Preview" style="width:100%; height:auto; border-radius: 5px;">
+  <img src="" alt="Preview" style="width:100%; height:auto; border-radius: 5px; max-width: 200px;
+  max-height: 200px;">
 </div>
 </body>
 </html>
-
