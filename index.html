@@ -1,512 +1,91 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <title>Liste Anime </title>
+  <meta charset="UTF-8">
+  <title>Connexion - Liste Anime</title>
   <link rel="icon" href="icone.ico" type="image/x-icon"/>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #121212;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+      color: #e0e0e0;
+    }
+    #loginBox {
+      background: #1e1e1e;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.6);
+      width: 300px;
+      text-align: center;
+    }
+    #loginBox input {
+      width: 90%;
+      padding: 10px;
+      margin: 8px 0;
+      border: 1px solid #444;
+      border-radius: 8px;
+      background: #121212;
+      color: #e0e0e0;
+    }
+    #loginBox input:focus { outline: none; border-color: #5f4cef; }
+    #loginBox button {
+      margin-top: 15px;
+      padding: 10px;
+      width: 95%;
+      border: none;
+      border-radius: 8px;
+      background: #5f4cef;
+      color: white;
+      cursor: pointer;
+    }
+    #loginBox button:hover { background: #6a59ec; }
+    .error { color: #e74c3c; margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <div id="loginBox">
+    <h2>Connexion</h2>
+    <input type="email" id="email" placeholder="Email" required>
+    <input type="password" id="password" placeholder="Mot de passe" required>
+    <button id="loginBtn">Se connecter</button>
+    <div class="error" id="loginError"></div>
+  </div>
+
   <script type="module">
-
-// redirige vers login si pas connecté
-if(localStorage.getItem("isLoggedIn") !== "true"){
-  window.location.href = "connexion.html";
-}
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js'
 
     const supabaseUrl = 'https://ydmqxamsgotncqhqvcgt.supabase.co'
     const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlkbXF4YW1zZ290bmNxaHF2Y2d0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYxNDMyMjAsImV4cCI6MjA3MTcxOTIyMH0.AtUSpfLpklsGzTEKnl2QjKeEcmPNOTEhXiosWivK0Gk'
     const supabase = createClient(supabaseUrl, supabaseKey)
 
-    const tbody = document.querySelector("#dataTable tbody")
-    const form = document.getElementById("animeForm")
-    const formTitle = document.getElementById("formTitle")
-    const modal = document.getElementById("modal")
-    const openModalBtn = document.getElementById("openModal")
-    const closeModalBtn = document.getElementById("closeModal")
-    const filtersDiv = document.getElementById("filters")
+    const loginBtn = document.getElementById("loginBtn")
+    const loginError = document.getElementById("loginError")
 
-    const previewDiv = document.getElementById("previewImage");
-    const previewImg = previewDiv.querySelector("img");
+    loginBtn.addEventListener("click", async () => {
+      const email = document.getElementById("email").value.trim()
+      const password = document.getElementById("password").value.trim()
 
-    let editingId = null
-    let allAnimes = [] // pour stocker et filtrer localement
-    let selectedTags = new Set()
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password })
 
-    // ouvrir / fermer la popup
-    openModalBtn.addEventListener("click", () => {
-      modal.classList.add("show")
-    })
-    closeModalBtn.addEventListener("click", () => {
-      modal.classList.remove("show")
-      editingId = null
-      form.reset()
-      formTitle.textContent = "Ajouter un anime"
+      if (error) {
+        loginError.textContent = "❌ Email ou mot de passe incorrect"
+        return
+      }
+
+      // Sauvegarde un flag dans localStorage pour rester connecté
+      localStorage.setItem("isLoggedIn", "true")
+      window.location.href = "main.html"
     })
 
-    let sortField = null;
-let sortOrder = 'asc'; // 'asc' ou 'desc'
-
-window.sortBy = function(field) {
-  if (sortField === field) {
-    // on inverse l'ordre si on reclique
-    sortOrder = (sortOrder === 'asc') ? 'desc' : 'asc';
-  } else {
-    sortField = field;
-    sortOrder = 'asc';
-  }
-  renderTable();
-};
-
-    // charger la liste
-    async function loadAnimes() {
-      const { data, error } = await supabase.from('animes').select('*').order('id', { ascending: false })
-      if (error) return console.error(error)
-      allAnimes = data
-      buildFilters()
-      renderTable()
+    // redirection si déjà connecté
+    if(localStorage.getItem("isLoggedIn") === "true"){
+      window.location.href = "main.html"
     }
-
-    function formatDate(dateStr) {
-  if (!dateStr) return '';
-  const d = new Date(dateStr);
-  const day = String(d.getDate()).padStart(2, '0');
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const year = String(d.getFullYear()).slice(-2);
-  return `${day}/${month}/${year}`;
-}
-
-const logoutBtn = document.getElementById("logoutBtn");
-
-logoutBtn.addEventListener("click", () => {
-  localStorage.removeItem("isLoggedIn");  // supprime le token local
-  window.location.href = "connexion.html";     // redirige vers la page de connexion
-});
-
-    // construire dynamiquement les filtres à partir des tags
-    function buildFilters() {
-      filtersDiv.innerHTML = ""
-      const tagsSet = new Set()
-      allAnimes.forEach(a => {
-        if (a.tags) a.tags.forEach(t => tagsSet.add(t))
-      })
-      tagsSet.forEach(tag => {
-        const label = document.createElement("label")
-        label.innerHTML = `<input type="checkbox" value="${tag}"> ${tag}`
-        label.querySelector("input").addEventListener("change", (e) => {
-          if (e.target.checked) {
-            selectedTags.add(tag)
-          } else {
-            selectedTags.delete(tag)
-          }
-          renderTable()
-        })
-        filtersDiv.appendChild(label)
-      })
-    }
-
-function addHoverPreviews() {
-  document.querySelectorAll("#dataTable tbody tr").forEach(tr => {
-    tr.addEventListener("mousemove", e => {
-      const imgUrl = tr.dataset.posterUrl;
-      if (imgUrl) {
-        previewImg.src = imgUrl;
-        previewDiv.style.display = "block";
-        previewDiv.style.left = e.pageX + 20 + "px";
-        previewDiv.style.top = e.pageY + -120 + "px";
-      }
-    });
-    tr.addEventListener("mouseout", () => {
-      previewDiv.style.display = "none";
-    });
-  });
-}
-
-    // rendu du tableau avec filtre
-    function renderTable() {
-      tbody.innerHTML = ""
-      let filtered = allAnimes
-
-if (selectedTags.size > 0) {
-  filtered = filtered.filter(anime =>
-    anime.tags && [...selectedTags].every(tag => anime.tags.includes(tag))
-  )
-}
-
-  if (sortField) {
-    filtered = [...filtered].sort((a, b) => {
-      if (sortField === 'note') {
-        const na = a.note || 0;
-        const nb = b.note || 0;
-        return sortOrder === 'asc' ? na - nb : nb - na;
-      }
-      if (sortField === 'date') {
-        const da = a.date ? new Date(a.date) : new Date(0);
-        const db = b.date ? new Date(b.date) : new Date(0);
-        return sortOrder === 'asc' ? da - db : db - da;
-      }
-      return 0;
-    });
-  }
-
-      filtered.forEach(animes => {
-        const tr = document.createElement("tr")
-        tr.classList.add("fade-in")
-          tr.dataset.posterUrl = animes.poster_url || ''
-        tr.innerHTML = `
-          <td>${animes.titre_jp || ''}</td>
-          <td>${animes.titre_en || ''}</td>
-          <td>${animes.titre_fr || ''}</td>
-          <td>${animes.description || ''}</td>
-          <td>${animes.description_perso || ''}</td>
-          <td>${animes.note || ''}</td>
-          <td>${animes.tags ? animes.tags.join(', ') : ''}</td>
-          <td>${formatDate(animes.date)}</td>
-          <td>
-            <button class="edit" onclick="editAnimes(${animes.id})">✏️</button>
-            <button class="delete" onclick="deleteAnimes(${animes.id})">🗑️</button>
-          </td>
-        `
-        tbody.appendChild(tr)
-      })
-      addHoverPreviews();
-    }
-
-    
-
-    // ajout / édition
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault()
-      const animes = {
-        titre_jp: form.titre_jp.value,
-        titre_en: form.titre_en.value,
-        titre_fr: form.titre_fr.value,
-        description: form.description.value,
-        description_perso: form.description_perso.value,
-        note: parseFloat(form.note.value) || null,
-        tags: form.tags.value.split(',').map(t => t.trim()).filter(t => t !== ""),
-        date: form.date.value || null,
-        poster_url: form.poster_url.value
-      }
-
-      if (editingId) {
-        await supabase.from('animes').update(animes).eq('id', editingId)
-        showNotification("✏️ Anime modifié")
-      } else {
-        await supabase.from('animes').insert([animes])
-        showNotification("✅ Anime ajouté")
-      }
-
-      editingId = null
-      form.reset()
-      formTitle.textContent = "Ajouter un anime"
-      modal.classList.remove("show")
-      loadAnimes()
-    })
-
-    // suppression
-    window.deleteAnimes = async function(id) {
-      if (confirm("Supprimer cet anime ?")) {
-        await supabase.from('animes').delete().eq('id', id)
-        showNotification("🗑️ Anime supprimé")
-        loadAnimes()
-      }
-    }
-
-    // édition
-    window.editAnimes = async function(id) {
-      const { data } = await supabase.from('animes').select('*').eq('id', id).single()
-      if (!data) return
-      editingId = id
-      formTitle.textContent = "Modifier un anime"
-      form.titre_jp.value = data.titre_jp || ''
-      form.titre_en.value = data.titre_en || ''
-      form.titre_fr.value = data.titre_fr || ''
-      form.description.value = data.description || ''
-      form.description_perso.value = data.description_perso || ''
-      form.note.value = data.note || ''
-      form.tags.value = data.tags ? data.tags.join(', ') : ''
-      form.date.value = data.date || ''
-      form.poster_url.value = data.poster_url || ''
-      modal.classList.add("show")
-    }
-
-    function showNotification(message) {
-      const notif = document.createElement("div")
-      notif.className = "notification"
-      notif.textContent = message
-      document.body.appendChild(notif)
-      setTimeout(() => notif.classList.add("show"), 50)
-      setTimeout(() => notif.classList.remove("show"), 2000)
-      setTimeout(() => notif.remove(), 2500)
-    }
-
-    loadAnimes()
   </script>
-  <style>
-     body {
-    font-family: Arial, sans-serif;
-    background: #121212;
-    margin: 0;
-    padding-left: 20px;
-    padding-right: 20px;
-    color: #333;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
-
-    .header-fixed {
-    position: sticky;
-    top: 0;
-    z-index: 10;
-    background: #121212;
-    border-bottom: 1px solid #333;
-  }
-
-    .table-container {
-    flex: 1;
-    overflow-y: scroll;
-    scrollbar-width: none; /* Firefox */
-  }
-
-  /* thead fixé */
-  thead tr {
-    position: sticky;
-    top: 0; 
-    z-index: 15;
-    background: #1e1e1e;
-  }
-
-  tr.fade-in { 
-    animation: fadeIn 0.5s ease; 
-  }
-  @keyframes fadeIn { 
-    from {opacity:0; transform:translateY(-5px);} 
-    to{opacity:1; transform:translateY(0);} 
-  }
-
-  .table-container::-webkit-scrollbar {
-    display: none; /* Chrome / Safari */
-  }
-    h1, h2 { text-align: center; color: #ffffff; }
-    #openModal {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      padding: 10px 15px;
-      background: #5f4cef;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      width: auto;
-    }
-    #openModal:hover { background: #6a59ec; }
-    /* Modal */
-    #modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.7);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.3s;
-      z-index: 100;
-    }
-    #modal.show {
-      visibility: visible;
-      opacity: 1;
-    }
-    #modalContent {
-     background: #1e1e1e;
-      color: #e0e0e0;
-      padding: 20px;
-      border-radius: 12px;
-      width: 400px;
-      box-shadow: 0 2px 12px rgba(0,0,0,0.7);
-      animation: slideDown 0.3s ease;
-    }
-    @keyframes slideDown {
-      from { transform: translateY(-20px); opacity: 0; }
-      to { transform: translateY(0); opacity: 1; }
-    }
-    input, textarea, button {
-      padding: 10px;
-      border: 1px solid #444;
-       background: #121212;
-      color: #e0e0e0;
-      border-radius: 8px;
-      margin: 5px 0;
-      width: 95%;
-    }
-
-        input:focus, textarea:focus {
-      outline: none;
-      border-color: #5f4cef;
-    }
-button.delete { background: #e74c3c; color: #fff; cursor: pointer; border: none; border-radius: 6px; padding: 6px 10px;}
-    button.delete:hover { background: #f76c5d; }
-    button.edit { background: #f39c12; color: #fff; cursor: pointer; border: none; border-radius: 6px; padding: 6px 10px;}
-    button.edit:hover { background: #f5b040; }
-    table {
-      width: 100%; border-collapse: collapse; margin-top: 20px;
-       background: #1e1e1e;; box-shadow: 0 2px 8px rgba(0,0,0,0.5);
-    }
-    th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; color: #e0e0e0;}
-    tr:hover {background-color: #2a2a2a;}
-    th { background: #1e1e1e; font-weight: bold; }
-    tr.fade-in { animation: fadeIn 0.5s ease; }
-    @keyframes fadeIn { from {opacity:0; transform:translateY(-5px);} to{opacity:1; transform:translateY(0);} }
-    .notification {
-      position: fixed; top:20px; right:20px;
-      background:#4caf50; color:#fff; padding:10px 15px;
-      border-radius:8px; opacity:0; transform:translateY(-10px);
-      transition: opacity 0.3s, transform 0.3s;
-    }
-    .notification.show { opacity:1; transform:translateY(0); z-index: 100; }
-
-    .filters {
-      margin: 20px; text-align: center;
-    }
-    .filters label {
-      margin: 0 10px;
-      display: inline-block;
-      color: white;
-    }
-
-/* garde les cellules <th> normales */
-th {
-  padding: 12px;
-  border-bottom: 1px solid #eee;
-  text-align: center;
-  vertical-align: middle; /* bien centré */
-}
-
-/* flex uniquement dans le wrapper */
-.th-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px; /* espace texte/bouton */
-}
-
-.sort-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  line-height: 1;
-  padding: 0;
-  color: #bbb;
-}
-.sort-btn:hover {
-  color: #5f4cef;
-}
-
-#logoutBtn {
-  position: fixed;        /* toujours visible en haut à droite */
-  top: 20px;
-  left: 150px;
-  padding: 10px 15px;
-  font-size: 14px;
-  background: #e74c3c;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  z-index: 100;
-  width: auto;
-}
-
-#logoutBtn:hover {
-  background: #f76c5d;
-}
-
-
-  </style>
-</head>
-<body>
-
-<button id="logoutBtn">🚪 Déconnexion</button>
-
-
-  <div class="header-fixed">
-  <button id="openModal">➕ Ajouter</button>
-
-    <h2>Liste des animes</h2>
-    <div class="filters" id="filters"></div>
-  </div>
-
-  <!-- zone scrollable -->
-  <div class="table-container">
-    <table id="dataTable">
-      <thead>
-        <tr>
-          <th>Titre JP</th>
-          <th>Titre EN</th>
-          <th>Titre FR</th>
-          <th>Description</th>
-          <th>Description perso</th>
-<th>
-      <div class="th-content">
-        <span>Note (/10)</span>
-        <button type="button" class="sort-btn" onclick="sortBy('note')">↕️</button>
-      </div>
-    </th>
-    <th>Tags</th>
-    <th>
-      <div class="th-content">
-        <span>Date</span>
-        <button type="button" class="sort-btn" onclick="sortBy('date')">↕️</button>
-      </div>
-    </th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
-
-  <!-- Modal -->
-  <div id="modal">
-    <div id="modalContent">
-      <h1 id="formTitle">Ajouter un anime</h1>
-      <form id="animeForm">
-        <input name="titre_jp" placeholder="Titre JP" required>
-        <input name="titre_en" placeholder="Titre EN">
-        <input name="titre_fr" placeholder="Titre FR">
-        <textarea name="description" placeholder="Description"></textarea>
-        <textarea name="description_perso" placeholder="Description perso"></textarea>
-        <input name="note" placeholder="Note" type="number" step="0.1">
-        <input name="tags" placeholder="Tags (séparés par virgules)">
-        <input name="date" type="date">
-        <input name="poster_url" placeholder="Lien image">
-        <button type="submit">💾 Sauvegarder</button>
-      </form>
-      <button id="closeModal">❌ Fermer</button>
-    </div>
-  </div>
-
-  <!-- Ajoute ce div juste avant la fermeture de </body> -->
-<div id="previewImage" style="
-  position: fixed;
-  pointer-events: none;
-  display: none;
-  border: 2px solid #ccc;
-  border-radius: 8px;
-  max-width: 200px;
-  max-height: 200px;
-  background: #fff;
-  padding: 5px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-  z-index: 1000;
-">
-  <img src="" alt="Preview" style="width:100%; height:auto; border-radius: 5px; max-width: 200px;
-  max-height: 200px;">
-</div>
 </body>
 </html>
-
